@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>2048: Limited Galaxy Edition</title>
+
+<style>
+#sideNav {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    padding: 12px 14px;
+
+    background: rgba(10, 10, 25, 0.6);
+    backdrop-filter: blur(6px);
+
+    border-radius: 12px;
+
+    box-shadow: 0 0 20px rgba(0,0,0,0.4);
+
+    z-index: 1000;
+}
+#sideNav a {
+    color: white;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: bold;
+
+    padding: 6px 10px;
+    border-radius: 8px;
+
+    transition: 0.2s;
+}
+
+#sideNav a:hover {
+    background: rgba(120, 160, 255, 0.25);
+    box-shadow: 0 0 10px rgba(120, 160, 255, 0.4);
+}
+html, body {
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+    font-family: Arial, sans-serif;
+}
+
+/* 🌌 Clear galaxy + spaceship background */
+body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    background: url("https://images.unsplash.com/photo-1446776811953-b23d57bd21aa") no-repeat center center fixed;
+    background-size: cover;
+    color: white;
+    position: relative;
+}
+
+/* darker overlay (keeps image clear, not blurred) */
+body::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.35);
+    z-index: -1;
+}
+
+/* optional subtle drifting stars */
+body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(white 1px, transparent 1px);
+    background-size: 80px 80px;
+    opacity: 0.15;
+    animation: drift 120s linear infinite;
+    z-index: -1;
+}
+
+@keyframes drift {
+    from { transform: translateY(0); }
+    to { transform: translateY(-1000px); }
+}
+
+/* TITLE */
+h1 {
+    margin: 5px;
+    font-size: 40px;
+    letter-spacing: 2px;
+    text-shadow: 0 0 10px rgba(100,200,255,0.6);
+}
+
+/* UI */
+#controls {
+    display: flex;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+button {
+    padding: 8px 14px;
+    border: none;
+    border-radius: 6px;
+    background: #4e5d94;
+    color: white;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #6c7bc0;
+}
+
+#score {
+    margin-top: 8px;
+    font-size: 20px;
+}
+
+/* GAME BOARD */
+#game {
+    width: 420px;
+    height: 420px;
+    margin-top: 15px;
+
+    background: rgba(10, 10, 25, 0.85);
+    border-radius: 15px;
+
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    padding: 10px;
+
+    box-shadow: 0 20px 60px rgba(0,0,0,0.7);
+}
+
+/* CELLS */
+.cell {
+    width: 90px;
+    height: 90px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 8px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 26px;
+    font-weight: bold;
+}
+
+/* TILES */
+.tile {
+    transition: transform 0.1s ease;
+}
+
+/* GALAXY COLOR PROGRESSION */
+.tile[data-value="2"]    { background:#2b2b44; }
+.tile[data-value="4"]    { background:#34345a; }
+.tile[data-value="8"]    { background:#4b4bff; box-shadow:0 0 10px #4b4bff; }
+.tile[data-value="16"]   { background:#6b4bff; box-shadow:0 0 12px #6b4bff; }
+.tile[data-value="32"]   { background:#9b4bff; box-shadow:0 0 14px #9b4bff; }
+.tile[data-value="64"]   { background:#ff4bd1; box-shadow:0 0 16px #ff4bd1; }
+.tile[data-value="128"]  { background:#ff6b4b; box-shadow:0 0 18px #ff6b4b; }
+.tile[data-value="256"]  { background:#ffb34b; box-shadow:0 0 20px #ffb34b; }
+.tile[data-value="512"]  { background:#ffe84b; box-shadow:0 0 22px #ffe84b; color:black; }
+.tile[data-value="1024"] { background:#a6ff4b; box-shadow:0 0 24px #a6ff4b; color:black; }
+.tile[data-value="2048"] { background:#4bffd6; box-shadow:0 0 30px #4bffd6; color:black; }
+
+/* POP EFFECT */
+@keyframes pop {
+    0% { transform: scale(0.5); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+.pop {
+    animation: pop 0.2s ease;
+}
+
+#message {
+    margin-top: 10px;
+    font-size: 22px;
+    color: #ffd36b;
+}
+</style>
+</head>
+
+<body>
+<div id="sideNav">
+    <a href="index.html">Home</a>
+    <a href="resume.html">Resume</a>
+    <a href="mabas.html">Mission</a>
+    <a href="game.html">Game</a>
+</div>
+
+<h1>🚀 2048: Limited Galaxy Edition</h1>
+
+<div id="controls">
+    <button onclick="init()">Restart</button>
+    <button onclick="undo()">Undo</button>
+</div>
+
+<div id="score">Score: 0</div>
+<div id="game"></div>
+<div id="message"></div>
+
+<script>
+const size = 4;
+let board = [];
+let score = 0;
+let gameOver = false;
+let history = [];
+
+const game = document.getElementById("game");
+const scoreDisplay = document.getElementById("score");
+const message = document.getElementById("message");
+
+function clone(b){ return JSON.parse(JSON.stringify(b)); }
+
+function saveState(){
+    history.push({board: clone(board), score});
+    if(history.length > 20) history.shift();
+}
+
+function undo(){
+    if(!history.length) return;
+    let prev = history.pop();
+    board = prev.board;
+    score = prev.score;
+    draw();
+}
+
+function getRandomTile(){
+    const r = Math.random();
+    if(r < 0.7) return 2;
+    if(r < 0.9) return 4;
+    return 8;
+}
+
+function init(){
+    board = Array(size).fill().map(()=>Array(size).fill(0));
+    score = 0;
+    gameOver = false;
+    history = [];
+    message.textContent = "";
+    addTile();
+    addTile();
+    draw();
+}
+
+function addTile(){
+    let empty = [];
+    for(let r=0;r<size;r++){
+        for(let c=0;c<size;c++){
+            if(board[r][c]===0) empty.push({r,c});
+        }
+    }
+    if(!empty.length) return;
+    let {r,c} = empty[Math.floor(Math.random()*empty.length)];
+    board[r][c] = getRandomTile();
+}
+
+function slide(row){
+    let arr = row.filter(v=>v);
+
+    for(let i=0;i<arr.length-1;i++){
+        if(arr[i]===arr[i+1]){
+            arr[i]*=2;
+            score += arr[i];
+            arr[i+1]=0;
+        }
+    }
+
+    arr = arr.filter(v=>v);
+    while(arr.length<size) arr.push(0);
+    return arr;
+}
+
+function rotate(){
+    let n = Array(size).fill().map(()=>Array(size).fill(0));
+    for(let r=0;r<size;r++){
+        for(let c=0;c<size;c++){
+            n[c][size-1-r]=board[r][c];
+        }
+    }
+    board=n;
+}
+
+function moveLeft(){
+    let moved=false;
+    for(let r=0;r<size;r++){
+        let newRow=slide(board[r]);
+        if(board[r].toString()!==newRow.toString()) moved=true;
+        board[r]=newRow;
+    }
+    return moved;
+}
+
+function move(dir){
+    if(gameOver) return;
+
+    saveState();
+
+    let rot=0;
+    if(dir==="up") rot=3;
+    if(dir==="right") rot=2;
+    if(dir==="down") rot=1;
+
+    for(let i=0;i<rot;i++) rotate();
+
+    let moved = moveLeft();
+
+    for(let i=0;i<(4-rot)%4;i++) rotate();
+
+    if(moved){
+        addTile();
+        draw();
+    }
+}
+
+function draw(){
+    game.innerHTML="";
+
+    board.forEach(row=>{
+        row.forEach(cell=>{
+            let d=document.createElement("div");
+            d.className="cell";
+
+            if(cell){
+                d.classList.add("tile");
+                d.textContent=cell;
+                d.setAttribute("data-value",cell);
+                setTimeout(()=>d.classList.add("pop"),0);
+            }
+
+            game.appendChild(d);
+        });
+    });
+
+    scoreDisplay.textContent="Score: "+score;
+
+    if(board.flat().includes(2048)){
+        message.textContent="You reached deep space 🌌";
+    }
+
+    if(isGameOver()){
+        message.textContent="Game Over!";
+        gameOver=true;
+    }
+}
+
+function isGameOver(){
+    for(let r=0;r<size;r++){
+        for(let c=0;c<size;c++){
+            if(board[r][c]===0) return false;
+            if(c<size-1 && board[r][c]===board[r][c+1]) return false;
+            if(r<size-1 && board[r][c]===board[r+1][c]) return false;
+        }
+    }
+    return true;
+}
+
+document.addEventListener("keydown",e=>{
+    if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.key)){
+        e.preventDefault();
+    }
+
+    if(e.key==="ArrowLeft") move("left");
+    if(e.key==="ArrowRight") move("right");
+    if(e.key==="ArrowUp") move("up");
+    if(e.key==="ArrowDown") move("down");
+});
+
+init();
+</script>
+
+</body>
+</html>

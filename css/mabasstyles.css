@@ -1,0 +1,79 @@
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    color: black;
+    background: linear-gradient(135deg, #e8f0ff, #f7f7ff);
+    padding-top: 60px;
+}
+
+/* TOP NAV */
+.topnav {
+    position: fixed;
+    top: 0;
+    right: 0;
+    display: flex;
+    gap: 10px;
+    padding: 12px 18px;
+    background: rgba(31, 41, 55, 0.95);
+    border-bottom-left-radius: 12px;
+}
+
+.topnav a {
+    color: white;
+    text-decoration: none;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+.topnav a:hover {
+    background: #374151;
+}
+
+/* MAIN LAYOUT */
+.container {
+    max-width: 900px;
+    margin: auto;
+    padding: 20px;
+}
+
+/* CARD BLOCKS */
+.card {
+    background: white;
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+/* IMAGE */
+img {
+    width: 100%;
+    max-width: 400px;
+    border-radius: 10px;
+}
+
+/* LISTS */
+ul, ol {
+    line-height: 1.8;
+}
+
+/* VIDEO + TABLEAU */
+iframe {
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+}
+
+/* TABLEAU */
+.tableauPlaceholder {
+    margin-top: 10px;
+}
+
+.tableauViz {
+    border-radius: 12px;
+}
+
+/* LINKS */
+a {
+    color: #2563eb;
+}
